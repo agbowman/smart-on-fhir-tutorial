@@ -231,17 +231,26 @@
 
   // Make fetchClinicalNotes available globally
   window.fetchClinicalNotes = function () {
+    console.log('fetchClinicalNotes called');
+
+    // Add logging for patient ID
+    console.log('Patient ID:', window.smart.patient.id);
+
     // Query parameters to fetch DocumentReferences for the patient
     var query = {
       patient: window.smart.patient.id,
       type: 'http://loinc.org|34133-9' // LOINC code for Summarization of episode note
     };
 
+    console.log('Query parameters:', query);
+
     // Fetch DocumentReference resources
     window.smart.api.search({
       type: 'DocumentReference',
       query: query
     }).then(function (response) {
+      console.log('API Response:', response);
+
       if (response.entry && response.entry.length > 0) {
         console.log('Fetched Notes:', response.entry.map(entry => ({
           date: entry.resource.created,
@@ -272,6 +281,7 @@
         });
         $('#clinical-notes-list').show();
       } else {
+        console.log('No clinical notes found');
         $('#notes-list').html('<li>No clinical notes found.</li>');
         $('#clinical-notes-list').show();
       }
