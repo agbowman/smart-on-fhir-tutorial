@@ -67,6 +67,31 @@
           <td id="hdl"></td>
         </tr>
       </table>
+
+      <!-- Clinical Note Submission Form -->
+      <h2>Submit a Clinical Note</h2>
+      <form id="clinical-note-form">
+        <label for="note-title">Note Title:</label>
+        <input type="text" id="note-title" name="note-title" required />
+
+        <label for="note-content">Note Content:</label>
+        <textarea
+          id="note-content"
+          name="note-content"
+          rows="6"
+          required
+        ></textarea>
+
+        <button type="submit">Submit Note</button>
+      </form>
+
+      <!-- Feedback Messages -->
+      <div id="feedback" style="display: none">
+        <p id="feedback-message"></p>
+      </div>
+
+      <!-- Error Messages -->
+      <div id="errors"></div>
     </div>
     <!-- Required JS files to enable this page to embed within an MPage -->
     <!--
