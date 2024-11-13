@@ -210,6 +210,21 @@
     };
   }
 
+  // Add event handler initialization
+  $(document).ready(function () {
+    // Attach click handler to the fetch notes button
+    $('#fetch-notes-button').on('click', function () {
+      fetchClinicalNotes();
+    });
+
+    // Attach submit handler to the clinical note form
+    $('#clinical-note-form').on('submit', function (e) {
+      e.preventDefault();
+      submitClinicalNote();
+    });
+  });
+
+  // Make fetchClinicalNotes available globally
   window.fetchClinicalNotes = function () {
     // Query parameters to fetch DocumentReferences for the patient
     var query = {
