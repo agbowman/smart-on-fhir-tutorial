@@ -156,6 +156,11 @@
     var noteTitle = $('#note-title').val();
     var noteContent = $('#note-content').val();
 
+    console.log('Submitting Note:', {
+      title: noteTitle,
+      content: noteContent
+    });
+
     if (!noteTitle || !noteContent) {
       $('#errors').html('<p>Please fill in all required fields.</p>');
       return;
@@ -238,6 +243,11 @@
       query: query
     }).then(function (response) {
       if (response.entry && response.entry.length > 0) {
+        console.log('Fetched Notes:', response.entry.map(entry => ({
+          date: entry.resource.created,
+          content: decodeBase64Content(entry.resource.content[0].attachment.data)
+        })));
+
         $('#notes-list').empty(); // Clear existing list
         response.entry.forEach(function (entry) {
           var doc = entry.resource;
