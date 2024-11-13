@@ -8,6 +8,9 @@
     }
 
     function onReady(smart) {
+      window.smart = smart;
+      console.log('SMART object initialized:', smart);
+
       if (smart.hasOwnProperty('patient')) {
         var patient = smart.patient;
         var pt = patient.read();
@@ -191,7 +194,7 @@
   function createDocumentReference(title, content) {
     var encodedContent = btoa(unescape(encodeURIComponent(content)));
 
-    return {
+    var docRef = {
       status: 'current',
       type: {
         coding: [{
@@ -208,13 +211,21 @@
           contentType: 'text/plain',
           data: encodedContent
         }
-      }],
-      context: {
+      }]
+    };
+
+    // Check if 'encounter' exists before adding it
+    if (window.smart.encounter && window.smart.encounter.id) {
+      docRef.context = {
         encounter: {
           reference: 'Encounter/' + window.smart.encounter.id
         }
-      }
-    };
+      };
+    } else {
+      console.warn('Encounter data is not available. Skipping encounter reference.');
+    }
+
+    return docRef;
   }
 
   // Add event handler initialization
@@ -234,6 +245,13 @@
   // Make fetchClinicalNotes available globally
   window.fetchClinicalNotes = function () {
     console.log('fetchClinicalNotes called');
+
+    // Check if window.smart and window.smart.patient are defined
+    if (!window.smart || !window.smart.patient) {
+      console.error('Smart or Smart.patient is undefined');
+      $('#errors').html('<p>SMART object is not initialized properly.</p>');
+      return;
+    }
 
     // Add logging for patient ID
     console.log('Patient ID:', window.smart.patient.id);
