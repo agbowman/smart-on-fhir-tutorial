@@ -171,6 +171,9 @@
       $('#feedback').show();
       $('#errors').hide();
       $('#clinical-note-form')[0].reset();
+
+      // NEW: Fetch updated notes list after successful submission
+      fetchClinicalNotes();
     }).catch(function (error) {
       console.error('Error submitting clinical note:', error);
       $('#errors').html('<p>Error submitting clinical note. Please try again.</p>');
@@ -205,6 +208,62 @@
         }
       }
     };
+  }
+
+  window.fetchClinicalNotes = function () {
+    // Query parameters to fetch DocumentReferences for the patient
+    var query = {
+      patient: window.smart.patient.id,
+      type: 'http://loinc.org|34133-9' // LOINC code for Summarization of episode note
+    };
+
+    // Fetch DocumentReference resources
+    window.smart.api.search({
+      type: 'DocumentReference',
+      query: query
+    }).then(function (response) {
+      if (response.entry && response.entry.length > 0) {
+        $('#notes-list').empty(); // Clear existing list
+        response.entry.forEach(function (entry) {
+          var doc = entry.resource;
+
+          // Decode the content if it exists
+          var content = '';
+          if (doc.content && doc.content[0] && doc.content[0].attachment && doc.content[0].attachment.data) {
+            content = decodeBase64Content(doc.content[0].attachment.data);
+          }
+
+          // Format the date
+          var date = doc.created ? new Date(doc.created).toLocaleString() : 'No Date';
+
+          // Create list item with expandable content
+          var listItem = $('<li>')
+            .append($('<strong>').text(date))
+            .append($('<br>'))
+            .append($('<pre>').text(content))
+            .append($('<hr>'));
+
+          $('#notes-list').append(listItem);
+        });
+        $('#clinical-notes-list').show();
+      } else {
+        $('#notes-list').html('<li>No clinical notes found.</li>');
+        $('#clinical-notes-list').show();
+      }
+    }).catch(function (error) {
+      console.error('Error fetching clinical notes:', error);
+      $('#errors').html('<p>Error fetching clinical notes. Please try again.</p>');
+    });
+  };
+
+  // Helper function to decode base64 content
+  function decodeBase64Content(base64Content) {
+    try {
+      return decodeURIComponent(escape(atob(base64Content)));
+    } catch (e) {
+      console.error('Error decoding content:', e);
+      return 'Error decoding content';
+    }
   }
   ///TESTING CODE ^^^^^
 
