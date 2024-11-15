@@ -3,7 +3,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Example-SMART-App Alex</title>
+    <title>eConsult SMART App</title>
 
     <link
       rel="stylesheet"
@@ -22,67 +22,51 @@
       <div class="bounce2"></div>
       <div class="bounce3"></div>
     </div>
-    <div id="holder">
-      <h2>ECONSULTING</h2>
+    <div id="holder" style="display: none">
+      <h2>eConsulting</h2>
 
-      <h2>Patient Resource</h2>
-      <table>
-        <tr>
-          <th>First Name:</th>
-          <td id="fname"></td>
-        </tr>
-        <tr>
-          <th>Last Name:</th>
-          <td id="lname"></td>
-        </tr>
-        <tr>
-          <th>Gender:</th>
-          <td id="gender"></td>
-        </tr>
-        <tr>
-          <th>Date of Birth:</th>
-          <td id="birthdate"></td>
-        </tr>
-      </table>
-      <h2>Observation Resource</h2>
-      <table>
-        <tr>
-          <th>Height:</th>
-          <td id="height"></td>
-        </tr>
-        <tr>
-          <th>Systolic Blood Pressure:</th>
-          <td id="systolicbp"></td>
-        </tr>
-        <tr>
-          <th>Diastolic Blood Pressure:</th>
-          <td id="diastolicbp"></td>
-        </tr>
-        <tr>
-          <th>LDL:</th>
-          <td id="ldl"></td>
-        </tr>
-        <tr>
-          <th>HDL:</th>
-          <td id="hdl"></td>
-        </tr>
-      </table>
+      <!-- Provider Information -->
+      <h3>Provider Information</h3>
+      <p>Name: <span id="provider-name"></span></p>
+      <p>Practitioner ID: <span id="practitioner-id"></span></p>
 
-      <!-- Clinical Note Submission Form -->
-      <h2>Submit a Clinical Note</h2>
-      <form id="clinical-note-form">
-        <label for="note-title">Note Title:</label>
-        <input type="text" id="note-title" name="note-title" required />
+      <!-- eConsult Submission Form -->
+      <h3>Submit an eConsult</h3>
+      <form id="econsult-form">
+        <label for="specialty">Specialty:</label>
+        <select id="specialty" name="specialty" required>
+          <option value="">Select Specialty</option>
+          <option value="Endocrinology">Endocrinology</option>
+          <option value="Infectious Disease">Infectious Disease</option>
+          <option value="Cardiology">Cardiology</option>
+          <option value="Neurology">Neurology</option>
+          <option value="Orthopedics">Orthopedics</option>
+          <option value="Dermatology">Dermatology</option>
+          <option value="Psychiatry">Psychiatry</option>
+          <option value="Rheumatology">Rheumatology</option>
+        </select>
 
-        <label for="note-content">Note Content:</label>
+        <label for="condition">Condition:</label>
+        <input type="text" id="condition" name="condition" required />
+
+        <label for="clinical-question">Clinical Question:</label>
         <textarea
-          id="note-content"
-          name="note-content"
-          rows="6"
+          id="clinical-question"
+          name="clinical-question"
+          rows="4"
           required
+          placeholder="Please specify your clinical question..."
         ></textarea>
 
-        <button type="submit">Submit Note</button>
+        <label for="additional-info">Additional Information:</label>
+        <textarea
+          id="additional-info"
+          name="additional-info"
+          rows="4"
+          placeholder="Include any relevant patient history, lab results, or other clinical information..."
+        ></textarea>
+
+        <button type="submit">Submit eConsult</button>
       </form>
 
       <!-- Feedback Messages -->
@@ -91,42 +75,27 @@
       </div>
 
       <!-- Error Messages -->
-      <div id="errors"></div>
+      <div id="error-messages"></div>
 
-      <!-- Clinical Notes Retrieval Section -->
-      <h2>Your Submitted Clinical Notes</h2>
-      <button id="fetch-notes-button">Fetch Clinical Notes</button>
-      <div id="clinical-notes-list" style="display: none">
-        <ul id="notes-list"></ul>
+      <!-- List of Submitted eConsults -->
+      <h3>Your Submitted eConsults</h3>
+      <button id="fetch-econsults-button">Fetch eConsults</button>
+      <div id="econsults-list" style="display: none">
+        <ul id="econsults-ul"></ul>
       </div>
     </div>
-    <!-- Required JS files to enable this page to embed within an MPage -->
-    <!--
-      Temporarily disable cerner-smart-embeddable-lib
-      <script src='https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js'></script>
-      <script src='./lib/js/cerner-smart-embeddable-lib-1.0.0.min.js'></script>
-    -->
 
-    <!-- First load jQuery -->
+    <!-- Required JS files -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-
-    <!-- Then load FHIR Client JS Library -->
     <script src="./lib/js/fhir-client-v0.1.12.js"></script>
-
-    <!-- Then load FHIR Client Cerner Additions -->
     <script src="./lib/js/fhir-client-cerner-additions-1.0.0.js"></script>
-
-    <!-- Finally load your application code -->
     <script src="./src/js/example-smart-app.js"></script>
 
     <script>
       extractData().then(
-        //Display Patient Demographics and Observations if extractData was success
-        function (p) {
-          drawVisualization(p);
+        function (data) {
+          drawVisualization(data);
         },
-
-        //Display 'Failed to call FHIR Service' if extractData failed
         function () {
           $("#loading").hide();
           $("#errors").html("<p> Failed to call FHIR Service </p>");

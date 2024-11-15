@@ -32,41 +32,26 @@
     <script>
       FHIR.oauth2.authorize({
         client_id: "1658d746-8403-4e2a-9058-a50ce4c308c8",
-        scope:
-          "launch online_access openid profile " +
-          "Account.read " +
-          "AllergyIntolerance.read AllergyIntolerance.write " +
-          "Appointment.read Appointment.write " +
-          "Binary.read " +
-          "CarePlan.read " +
-          "CareTeam.read " +
-          "ChargeItem.read ChargeItem.write " +
-          "Communication.read Communication.write " +
-          "Condition.read Condition.write " +
-          "Consent.read " +
-          "Coverage.read Coverage.write " +
-          "DiagnosticReport.read DiagnosticReport.write " +
-          "DocumentReference.read DocumentReference.write " +
-          "Encounter.read Encounter.write " +
-          "FamilyMemberHistory.read FamilyMemberHistory.write " +
-          "Goal.read " +
-          "Immunization.read Immunization.write " +
-          "InsurancePlan.read " +
-          "MedicationAdministration.read " +
-          "MedicationDispense.read " +
-          "MedicationRequest.read MedicationRequest.write " +
-          "NutritionOrder.read " +
-          "Observation.read Observation.write " +
-          "Patient.read Patient.write " +
-          "Person.read " +
-          "Procedure.read Procedure.write " +
-          "Provenance.read Provenance.write " +
-          "Questionnaire.read " +
-          "QuestionnaireResponse.read QuestionnaireResponse.write " +
-          "RelatedPerson.read RelatedPerson.write " +
-          "Schedule.read " +
-          "ServiceRequest.read " +
-          "Slot.read Slot.write",
+        scope: [
+          "launch",
+          "online_access",
+          "openid",
+          "profile",
+          "user/Practitioner.read",
+          "user/Patient.read",
+          "user/Patient.write",
+          "user/DocumentReference.read",
+          "user/DocumentReference.write",
+          "user/Condition.read",
+          "user/Condition.write",
+          "user/Procedure.read",
+          "user/Procedure.write",
+          "user/Observation.read",
+          "user/Observation.write",
+          "user/Encounter.read", // Added for accessing encounter data
+          "user/Encounter.write", // Added if writing/updating encounter data is needed
+          "user/Account.read", // Include only if accessing billing/account information is necessary
+        ].join(" "),
       });
     </script>
     <div class="spinner">

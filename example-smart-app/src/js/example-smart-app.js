@@ -11,190 +11,136 @@
       window.smart = smart;
       console.log('SMART object initialized:', smart);
 
-      if (smart.hasOwnProperty('patient')) {
-        var patient = smart.patient;
-        var pt = patient.read();
-        var obv = smart.patient.api.fetchAll({
-          type: 'Observation',
-          query: {
-            code: {
-              $or: ['http://loinc.org|8302-2', 'http://loinc.org|8462-4',
-                'http://loinc.org|8480-6', 'http://loinc.org|2085-9',
-                'http://loinc.org|2089-1', 'http://loinc.org|55284-4'
-              ]
-            }
-          }
-        });
+      // Fetch Provider Information
+      var provider = smart.user;
+      var providerInfo = provider.read();
 
-        $.when(pt, obv).fail(onError);
+      // Fetch Provider's eConsults (DocumentReferences)
+      var econsults = smart.api.search({
+        type: 'DocumentReference',
+        query: {
+          'author': 'Practitioner/' + smart.user.id,
+          'type': 'http://loinc.org|34133-9'
+        }
+      });
 
-        $.when(pt, obv).done(function (patient, obv) {
-          var byCodes = smart.byCodes(obv, 'code');
-          var gender = patient.gender;
+      $.when(providerInfo, econsults).fail(onError);
 
-          var fname = '';
-          var lname = '';
+      $.when(providerInfo, econsults).done(function (providerResponse, econsultsResponse) {
+        // Process provider information
+        var providerName = providerResponse.name ? providerResponse.name : "Provider";
+        var practitionerId = providerResponse.id ? providerResponse.id : "N/A";
 
-          // if (typeof patient.name[0] !== 'undefined') {
-          //   fname = patient.name[0].given.join(' ');
-          //   lname = patient.name[0].family.join(' ');
-          // }
+        // Process eConsult list
+        var econsultList = econsultsResponse.entry ?
+          econsultsResponse.entry.map(entry => entry.resource) : [];
 
-          var height = byCodes('8302-2');
-          var systolicbp = getBloodPressureValue(byCodes('55284-4'), '8480-6');
-          var diastolicbp = getBloodPressureValue(byCodes('55284-4'), '8462-4');
-          var hdl = byCodes('2085-9');
-          var ldl = byCodes('2089-1');
+        // Create data structure
+        var data = {
+          provider: {
+            name: providerName,
+            id: practitionerId
+          },
+          econsults: econsultList
+        };
 
-          var p = defaultPatient();
-          p.birthdate = patient.birthDate;
-          p.gender = gender;
-          // p.fname = fname;
-          // p.lname = lname;
-          p.fname = "test";
-          p.lname = "test";
-          p.height = getQuantityValueAndUnit(height[0]);
-
-          if (typeof systolicbp != 'undefined') {
-            p.systolicbp = systolicbp;
-          }
-
-          if (typeof diastolicbp != 'undefined') {
-            p.diastolicbp = diastolicbp;
-          }
-
-          p.hdl = getQuantityValueAndUnit(hdl[0]);
-          p.ldl = getQuantityValueAndUnit(ldl[0]);
-
-          ret.resolve(p);
-        });
-      } else {
-        onError();
-      }
+        ret.resolve(data);
+      });
     }
 
     FHIR.oauth2.ready(onReady, onError);
     return ret.promise();
-
   };
 
-  function defaultPatient() {
-    return {
-      fname: {
-        value: ''
-      },
-      lname: {
-        value: ''
-      },
-      gender: {
-        value: ''
-      },
-      birthdate: {
-        value: ''
-      },
-      height: {
-        value: ''
-      },
-      systolicbp: {
-        value: ''
-      },
-      diastolicbp: {
-        value: ''
-      },
-      ldl: {
-        value: ''
-      },
-      hdl: {
-        value: ''
-      },
-    };
-  }
-
-  function getBloodPressureValue(BPObservations, typeOfPressure) {
-    var formattedBPObservations = [];
-    BPObservations.forEach(function (observation) {
-      var BP = observation.component.find(function (component) {
-        return component.code.coding.find(function (coding) {
-          return coding.code == typeOfPressure;
-        });
-      });
-      if (BP) {
-        observation.valueQuantity = BP.valueQuantity;
-        formattedBPObservations.push(observation);
-      }
-    });
-
-    return getQuantityValueAndUnit(formattedBPObservations[0]);
-  }
-
-  function getQuantityValueAndUnit(ob) {
-    if (typeof ob != 'undefined' &&
-      typeof ob.valueQuantity != 'undefined' &&
-      typeof ob.valueQuantity.value != 'undefined' &&
-      typeof ob.valueQuantity.unit != 'undefined') {
-      return ob.valueQuantity.value + ' ' + ob.valueQuantity.unit;
-    } else {
-      return undefined;
-    }
-  }
-
-  window.drawVisualization = function (p) {
+  window.drawVisualization = function (data) {
     $('#holder').show();
     $('#loading').hide();
-    $('#fname').html(p.fname);
-    $('#lname').html(p.lname);
-    $('#gender').html(p.gender);
-    $('#birthdate').html(p.birthdate);
-    $('#height').html(p.height);
-    $('#systolicbp').html(p.systolicbp);
-    $('#diastolicbp').html(p.diastolicbp);
-    $('#ldl').html(p.ldl);
-    $('#hdl').html(p.hdl);
+
+    // Display Provider Information
+    $('#provider-name').html(data.provider.name);
+    $('#practitioner-id').html(data.provider.id);
+
+    // Display eConsults List
+    var $econsultsList = $('#econsults-ul');
+    $econsultsList.empty();
+
+    if (data.econsults.length > 0) {
+      data.econsults.forEach(function (econsult) {
+        var content = econsult.content && econsult.content[0] &&
+          econsult.content[0].attachment && econsult.content[0].attachment.data ?
+          decodeBase64Content(econsult.content[0].attachment.data) :
+          "No Content";
+
+        var date = econsult.created ?
+          new Date(econsult.created).toLocaleString() : 'No Date';
+
+        var listItem = $('<li>')
+          .append($('<strong>').text("Submitted on: " + date))
+          .append($('<p>').text(content))
+          .append($('<hr>'));
+
+        $econsultsList.append(listItem);
+      });
+      $('#econsults-list').show();
+    } else {
+      $econsultsList.html('<li>No eConsults found.</li>');
+      $('#econsults-list').show();
+    }
   };
 
+  window.submitEConsult = function () {
+    var specialty = $('#specialty').val();
+    var condition = $('#condition').val();
+    var clinicalQuestion = $('#clinical-question').val();
+    var additionalInfo = $('#additional-info').val();
 
-
-
-
-  ///TESTING CODE VVVVV
-  window.submitClinicalNote = function () {
-    var noteTitle = $('#note-title').val();
-    var noteContent = $('#note-content').val();
-
-    console.log('Submitting Note:', {
-      title: noteTitle,
-      content: noteContent
+    console.log('Submitting eConsult:', {
+      specialty: specialty,
+      condition: condition,
+      clinicalQuestion: clinicalQuestion,
+      additionalInfo: additionalInfo
     });
 
-    if (!noteTitle || !noteContent) {
-      $('#errors').html('<p>Please fill in all required fields.</p>');
+    if (!specialty || !condition || !clinicalQuestion) {
+      $('#error-messages').html('<p>Please fill in all required fields.</p>');
       return;
     }
 
-    var documentReference = createDocumentReference(noteTitle, noteContent);
+    var documentReference = createEConsultDocumentReference(
+      specialty, condition, clinicalQuestion, additionalInfo
+    );
 
     window.smart.api.create({
       resourceType: 'DocumentReference',
       body: documentReference
     }).then(function (response) {
-      $('#feedback-message').text('Clinical note submitted successfully!');
+      $('#feedback-message').text('eConsult submitted successfully!');
       $('#feedback').show();
-      $('#errors').hide();
-      $('#clinical-note-form')[0].reset();
-
-      // NEW: Fetch updated notes list after successful submission
-      fetchClinicalNotes();
+      $('#error-messages').hide();
+      $('#econsult-form')[0].reset();
+      fetchEConsults();
     }).catch(function (error) {
-      console.error('Error submitting clinical note:', error);
-      $('#errors').html('<p>Error submitting clinical note. Please try again.</p>');
+      console.error('Error submitting eConsult:', error);
+      $('#error-messages').html('<p>Error submitting eConsult. Please try again.</p>');
       $('#feedback').hide();
     });
   };
 
-  function createDocumentReference(title, content) {
-    var encodedContent = btoa(unescape(encodeURIComponent(content)));
+  function createEConsultDocumentReference(specialty, condition, clinicalQuestion, additionalInfo) {
+    // Create plain text content for the clinical note
+    var clinicalNoteContent = `
+      eConsult Submission:
+      Specialty: ${specialty}
+      Condition: ${condition}
+      Clinical Question: ${clinicalQuestion}
+      Additional Information: ${additionalInfo}
+    `;
+
+    // Encode the content in base64
+    var encodedContent = btoa(unescape(encodeURIComponent(clinicalNoteContent)));
 
     var docRef = {
+      resourceType: 'DocumentReference',
       status: 'current',
       type: {
         coding: [{
@@ -203,111 +149,94 @@
           display: 'Summarization of episode note'
         }]
       },
+      category: [{
+        coding: [{
+          system: 'http://hl7.org/fhir/document-category',
+          code: 'referral',
+          display: 'Referral'
+        }]
+      }],
       subject: {
         reference: 'Patient/' + window.smart.patient.id
       },
+      author: [{
+        reference: 'Practitioner/' + window.smart.user.id
+      }],
+      date: new Date().toISOString(),
       content: [{
         attachment: {
           contentType: 'text/plain',
-          data: encodedContent
+          data: encodedContent,
+          title: 'eConsult Request'
         }
       }]
     };
 
-    // Check if 'encounter' exists before adding it
+    // Add encounter context if available
     if (window.smart.encounter && window.smart.encounter.id) {
       docRef.context = {
-        encounter: {
+        encounter: [{
           reference: 'Encounter/' + window.smart.encounter.id
-        }
+        }]
       };
-    } else {
-      console.warn('Encounter data is not available. Skipping encounter reference.');
     }
 
     return docRef;
   }
 
-  // Add event handler initialization
   $(document).ready(function () {
-    // Attach click handler to the fetch notes button
-    $('#fetch-notes-button').on('click', function () {
-      fetchClinicalNotes();
+    $('#fetch-econsults-button').on('click', function () {
+      fetchEConsults();
     });
 
-    // Attach submit handler to the clinical note form
-    $('#clinical-note-form').on('submit', function (e) {
+    $('#econsult-form').on('submit', function (e) {
       e.preventDefault();
-      submitClinicalNote();
+      submitEConsult();
     });
   });
 
-  // Make fetchClinicalNotes available globally
-  window.fetchClinicalNotes = function () {
-    console.log('fetchClinicalNotes called');
-
-    // Check if window.smart and window.smart.patient are defined
-    if (!window.smart || !window.smart.patient) {
-      console.error('Smart or Smart.patient is undefined');
+  window.fetchEConsults = function () {
+    if (!window.smart || !window.smart.api) {
+      console.error('Smart or Smart.api is undefined');
       $('#errors').html('<p>SMART object is not initialized properly.</p>');
       return;
     }
 
-    // Add logging for patient ID
-    console.log('Patient ID:', window.smart.patient.id);
-
-    // Query parameters to fetch DocumentReferences for the patient
     var query = {
-      patient: window.smart.patient.id,
-      type: 'http://loinc.org|34133-9' // LOINC code for Summarization of episode note
+      'author': 'Practitioner/' + window.smart.user.id,
+      'type': 'http://loinc.org|34133-9'
     };
 
-    console.log('Query parameters:', query);
-
-    // Fetch DocumentReference resources
     window.smart.api.search({
       type: 'DocumentReference',
       query: query
     }).then(function (response) {
-      console.log('API Response:', response);
-
       if (response.entry && response.entry.length > 0) {
-        console.log('Fetched Notes:', response.entry.map(entry => ({
-          date: entry.resource.created,
-          content: decodeBase64Content(entry.resource.content[0].attachment.data)
-        })));
-
-        $('#notes-list').empty(); // Clear existing list
+        $('#econsults-ul').empty();
         response.entry.forEach(function (entry) {
           var doc = entry.resource;
+          var content = doc.content && doc.content[0] &&
+            doc.content[0].attachment && doc.content[0].attachment.data ?
+            decodeBase64Content(doc.content[0].attachment.data) :
+            "No Content";
+          var date = doc.created ?
+            new Date(doc.created).toLocaleString() : 'No Date';
 
-          // Decode the content if it exists
-          var content = '';
-          if (doc.content && doc.content[0] && doc.content[0].attachment && doc.content[0].attachment.data) {
-            content = decodeBase64Content(doc.content[0].attachment.data);
-          }
-
-          // Format the date
-          var date = doc.created ? new Date(doc.created).toLocaleString() : 'No Date';
-
-          // Create list item with expandable content
           var listItem = $('<li>')
-            .append($('<strong>').text(date))
-            .append($('<br>'))
-            .append($('<pre>').text(content))
+            .append($('<strong>').text("Submitted on: " + date))
+            .append($('<p>').text(content))
             .append($('<hr>'));
 
-          $('#notes-list').append(listItem);
+          $('#econsults-ul').append(listItem);
         });
-        $('#clinical-notes-list').show();
+        $('#econsults-list').show();
       } else {
-        console.log('No clinical notes found');
-        $('#notes-list').html('<li>No clinical notes found.</li>');
-        $('#clinical-notes-list').show();
+        $('#econsults-ul').html('<li>No eConsults found.</li>');
+        $('#econsults-list').show();
       }
     }).catch(function (error) {
-      console.error('Error fetching clinical notes:', error);
-      $('#errors').html('<p>Error fetching clinical notes. Please try again.</p>');
+      console.error('Error fetching eConsults:', error);
+      $('#errors').html('<p>Error fetching eConsults. Please try again.</p>');
     });
   };
 
@@ -320,8 +249,4 @@
       return 'Error decoding content';
     }
   }
-  ///TESTING CODE ^^^^^
-
-
-
 })(window);
