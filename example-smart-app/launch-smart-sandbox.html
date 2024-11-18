@@ -41,6 +41,10 @@
       // Add logging to confirm script loading
       console.log("Initiating SMART OAuth2 authorization");
 
+      // Capture role parameter from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const role = urlParams.get("role") || "pcp"; // default to 'pcp'
+
       FHIR.oauth2.authorize({
         client_id: "1658d746-8403-4e2a-9058-a50ce4c308c8",
         scope: [
@@ -59,10 +63,11 @@
           "user/Procedure.write",
           "user/Observation.read",
           "user/Observation.write",
-          "user/Encounter.read", // Added for accessing encounter data
-          "user/Encounter.write", // Added if writing/updating encounter data is needed
-          "user/Account.read", // Include only if accessing billing/account information is necessary
+          "user/Encounter.read",
+          "user/Encounter.write",
         ].join(" "),
+        // Pass role as state to maintain context
+        state: JSON.stringify({ role: role }),
       });
     </script>
 
