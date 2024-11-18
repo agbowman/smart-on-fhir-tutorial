@@ -46,7 +46,7 @@
       const role = urlParams.get("role") || "pcp"; // default to 'pcp'
 
       FHIR.oauth2.authorize({
-        client_id: "1658d746-8403-4e2a-9058-a50ce4c308c8",
+        client_id: "test-1658d746-8403-4e2a-9058-a50ce4c308c8",
         scope: [
           "launch",
           "online_access",
@@ -68,8 +68,6 @@
         ].join(" "),
         // Pass role as state to maintain context
         state: JSON.stringify({ role: role }),
-        redirect_uri:
-          "https://agbowman.github.io/smart-on-fhir-tutorial/example-smart-app/",
       });
     </script>
 
