@@ -4,7 +4,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>eConsult SMART App</title>
-
     <link
       rel="stylesheet"
       type="text/css"
@@ -40,44 +39,55 @@
       <p>Name: <span id="patient-name"></span></p>
       <p>Patient ID: <span id="patient-id"></span></p>
 
-      <!-- eConsult Submission Form -->
-      <h3>Submit an eConsult</h3>
-      <form id="econsult-form">
-        <label for="specialty">Specialty:</label>
-        <select id="specialty" name="specialty" required>
-          <option value="">Select Specialty</option>
-          <option value="Endocrinology">Endocrinology</option>
-          <option value="Infectious Disease">Infectious Disease</option>
-          <option value="Cardiology">Cardiology</option>
-          <option value="Neurology">Neurology</option>
-          <option value="Orthopedics">Orthopedics</option>
-          <option value="Dermatology">Dermatology</option>
-          <option value="Psychiatry">Psychiatry</option>
-          <option value="Rheumatology">Rheumatology</option>
-        </select>
+      <!-- **PCP eConsult Submission Form** -->
+      <div id="pcp-form" style="display: none">
+        <h3>Submit an eConsult</h3>
+        <form id="econsult-form">
+          <label for="specialty">Specialty:</label>
+          <select id="specialty" name="specialty" required>
+            <option value="">Select Specialty</option>
+            <option value="Endocrinology">Endocrinology</option>
+            <option value="Infectious Disease">Infectious Disease</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="Neurology">Neurology</option>
+            <option value="Orthopedics">Orthopedics</option>
+            <option value="Dermatology">Dermatology</option>
+            <option value="Psychiatry">Psychiatry</option>
+            <option value="Rheumatology">Rheumatology</option>
+          </select>
 
-        <label for="condition">Condition:</label>
-        <input type="text" id="condition" name="condition" required />
+          <label for="condition">Condition:</label>
+          <input type="text" id="condition" name="condition" required />
 
-        <label for="clinical-question">Clinical Question:</label>
-        <textarea
-          id="clinical-question"
-          name="clinical-question"
-          rows="4"
-          required
-          placeholder="Please specify your clinical question..."
-        ></textarea>
+          <label for="clinical-question">Clinical Question:</label>
+          <textarea
+            id="clinical-question"
+            name="clinical-question"
+            rows="4"
+            required
+            placeholder="Please specify your clinical question..."
+          ></textarea>
 
-        <label for="additional-info">Additional Information:</label>
-        <textarea
-          id="additional-info"
-          name="additional-info"
-          rows="4"
-          placeholder="Include any relevant patient history, lab results, or other clinical information..."
-        ></textarea>
+          <label for="additional-info">Additional Information:</label>
+          <textarea
+            id="additional-info"
+            name="additional-info"
+            rows="4"
+            placeholder="Include any relevant patient history, lab results, or other clinical information..."
+          ></textarea>
 
-        <button type="submit">Submit eConsult</button>
-      </form>
+          <button type="submit">Submit eConsult</button>
+        </form>
+      </div>
+
+      <!-- **Specialist Interface** -->
+      <div id="specialist-interface" style="display: none">
+        <h3>Your Assigned eConsults</h3>
+        <button id="fetch-econsults-button">Fetch eConsults</button>
+        <div id="econsults-list" style="display: none">
+          <ul id="econsults-ul"></ul>
+        </div>
+      </div>
 
       <!-- Feedback Messages -->
       <div id="feedback" style="display: none">
@@ -86,13 +96,6 @@
 
       <!-- Error Messages -->
       <div id="error-messages"></div>
-
-      <!-- List of Submitted eConsults -->
-      <h3>Your Submitted eConsults</h3>
-      <button id="fetch-econsults-button">Fetch eConsults</button>
-      <div id="econsults-list" style="display: none">
-        <ul id="econsults-ul"></ul>
-      </div>
     </div>
 
     <!-- Required JS files -->
