@@ -42,22 +42,12 @@
       var patient = smart.patient;
       var patientInfo = patient.read();
 
-      // Fetch Provider's eConsults
-      var econsults = smart.api.search({
-        type: 'DocumentReference',
-        query: {
-          'author': 'Practitioner/' + smart.user.id,
-          'type': 'http://loinc.org|34133-9'
-        }
-      });
+      // Wait for provider and patient info only
+      $.when(providerInfo, patientInfo).fail(onError);
 
-      // Wait for all promises: providerInfo, patientInfo, econsults
-      $.when(providerInfo, patientInfo, econsults).fail(onError);
-
-      $.when(providerInfo, patientInfo, econsults).done(function (providerResponse, patientResponse, econsultsResponse) {
+      $.when(providerInfo, patientInfo).done(function (providerResponse, patientResponse) {
         console.log('Provider Response:', providerResponse);
         console.log('Patient Response:', patientResponse);
-        console.log('eConsults Response:', econsultsResponse);
 
         // Process Patient Information
         var patientName = patientResponse.name ?
@@ -90,18 +80,6 @@
           active: providerResponse.active
         });
 
-        // Process eConsult List
-        var econsultList = econsultsResponse.entry ?
-          econsultsResponse.entry.map(entry => {
-            console.log('eConsult Entry:', entry);
-            return entry.resource;
-          }) : [];
-
-        console.log('Processed eConsults:', {
-          total: econsultList.length,
-          list: econsultList
-        });
-
         // Create Data Structure
         var data = {
           provider: {
@@ -111,8 +89,7 @@
           patient: {
             name: patientName,
             id: patientId
-          },
-          econsults: econsultList
+          }
         };
 
         ret.resolve(data);
@@ -131,41 +108,18 @@
     $('#provider-name').html(data.provider.name);
     $('#practitioner-id').html(data.provider.id);
 
-    // **Display Patient Information**
+    // Display Patient Information
     $('#patient-name').html(data.patient.name);
     $('#patient-id').html(data.patient.id);
 
-    // **Assign the correct Practitioner ID**
-    window.practitionerId = data.provider.id; // Assigning from data.provider.id
+    // Assign the correct Practitioner ID
+    window.practitionerId = data.provider.id;
 
-    console.log("Assigned Practitioner ID:", window.practitionerId); // **Logging Practitioner ID**
+    console.log("Assigned Practitioner ID:", window.practitionerId);
 
-    // Display eConsults List
-    var $econsultsList = $('#econsults-ul');
-    $econsultsList.empty();
-
-    if (data.econsults.length > 0) {
-      data.econsults.forEach(function (econsult) {
-        var content = econsult.content && econsult.content[0] &&
-          econsult.content[0].attachment && econsult.content[0].attachment.data ?
-          decodeBase64Content(econsult.content[0].attachment.data) :
-          "No Content";
-
-        var date = econsult.date ?
-          new Date(econsult.date).toLocaleString() : 'No Date';
-
-        var listItem = $('<li>')
-          .append($('<strong>').text("Submitted on: " + date))
-          .append($('<p>').text(content))
-          .append($('<hr>'));
-
-        $econsultsList.append(listItem);
-      });
-      $('#econsults-list').show();
-    } else {
-      $econsultsList.html('<li>No eConsults found.</li>');
-      $('#econsults-list').show();
-    }
+    // Initialize empty eConsults list
+    $('#econsults-list').hide();
+    $('#econsults-ul').empty();
   };
 
   window.submitEConsult = function () {
