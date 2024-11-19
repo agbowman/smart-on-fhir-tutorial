@@ -9,10 +9,6 @@
       type="text/css"
       href="./src/css/example-smart-app.css"
     />
-    <!--
-      Temporarily disable cerner-smart-embeddable-lib
-      <link rel='stylesheet' type='text/css' href='./lib/css/cerner-smart-embeddable-lib-1.0.0.min.css'>
-    -->
   </head>
   <body>
     <!-- Error Display Area -->
@@ -34,12 +30,12 @@
       <p>Name: <span id="provider-name"></span></p>
       <p>Practitioner ID: <span id="practitioner-id"></span></p>
 
-      <!-- **Patient Information** -->
+      <!-- Patient Information -->
       <h3>Patient Information</h3>
       <p>Name: <span id="patient-name"></span></p>
       <p>Patient ID: <span id="patient-id"></span></p>
 
-      <!-- **PCP eConsult Submission Form** -->
+      <!-- PCP eConsult Submission Form -->
       <div id="pcp-form" style="display: none">
         <h3>Submit an eConsult</h3>
         <form id="econsult-form">
@@ -80,7 +76,7 @@
         </form>
       </div>
 
-      <!-- **Specialist Interface** -->
+      <!-- Specialist Interface -->
       <div id="specialist-interface" style="display: none">
         <h3>Your Assigned eConsults</h3>
         <button id="fetch-econsults-button">Fetch eConsults</button>
@@ -99,11 +95,16 @@
     </div>
 
     <!-- Required JS files -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="./lib/js/fhir-client-v0.1.12.js"></script>
-    <script src="./lib/js/fhir-client-cerner-additions-1.0.0.js"></script>
     <script src="./src/js/example-smart-app.js"></script>
 
+    <!-- FHIR Client JS Library -->
+    <script src="./lib/js/fhir-client-v0.1.12.js"></script>
+
+    <!-- Prevent session bleed caused by single threaded embedded browser and sessionStorage API -->
+    <!-- https://github.com/cerner/fhir-client-cerner-additions -->
+    <script src="./lib/js/fhir-client-cerner-additions-1.0.0.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- FHIR Workflow Script -->
     <script>
       extractData().then(
         function (data) {
@@ -111,7 +112,7 @@
         },
         function () {
           $("#loading").hide();
-          $("#errors").html("<p> Failed to call FHIR Service </p>");
+          $("#errors").html("<p>Failed to call FHIR Service</p>");
         }
       );
     </script>
